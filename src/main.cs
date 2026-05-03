@@ -2,33 +2,61 @@ class Program
 {
     static void Main()
     {
+        var builtinCommands = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "echo", "exit", "type"
+        };
+
         while (true)
         {
             Console.Write("$ ");
-            var command = Console.ReadLine();
+            var input = Console.ReadLine();
 
-            if (command == "exit") break;
+            if (string.IsNullOrWhiteSpace(input)) continue;
+            if (input == "exit 0") break;
 
-            else if (command.StartsWith("echo "))
+            var parts = input.Split(' ', 2);
+            var cmd = parts[0];
+            var argument = parts.Length > 1 ? parts[1] : "";
+
+            if (cmd == "echo")
             {
-                Console.WriteLine(command[5..]);
+                Console.WriteLine(argument);
             }
-
-            else if (command.StartsWith("type "))
+            else if (cmd == "type")
             {
-                var commandName = command[5..];
-                var builtinCommands = new[] { "echo", "exit", "type" };
-                if (builtinCommands.Contains(commandName))
+                if (builtinCommands.Contains(argument))
                 {
-                    Console.WriteLine($"{commandName} is a shell builtin");
+                    Console.WriteLine($"{argument} is a shell builtin");
                 }
                 else
                 {
-                    Console.WriteLine($"{commandName}: not found");
+                    string? pathEnv = Environment.GetEnvironmentVariable("PATH");
+                    string[] directories = pathEnv?.Split(Path.PathSeparator) ?? [];
+                    
+                    bool found = false;
+                    foreach (var dir in directories) 
+                    {
+                        var filePath = Path.Combine(dir, argument);
+
+                        if (File.Exists(filePath))
+                        {
+                            Console.WriteLine($"{argument} is {filePath}");
+                            found = true;
+                            break;
+                        }   
+                    }
+
+                    if (!found)
+                    {
+                        Console.WriteLine($"{argument}: not found");
+                    }
                 }
             }
-
-            else Console.WriteLine($"{command}: command not found");
+            else 
+            {
+                Console.WriteLine($"{input}: command not found");
+            }
         }
     }
 }
