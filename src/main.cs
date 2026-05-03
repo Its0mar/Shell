@@ -79,27 +79,27 @@ class Program
                     }
                     else
                     {
+                        var escapedArgs = string.Join(' ', argument.Select(arg => $"\"{arg}\""));
+
                         var startInfo = new ProcessStartInfo
                         {
-                            FileName = filePath, 
+                            FileName = "/bin/sh",
                             UseShellExecute = false,
-                            RedirectStandardOutput = false,
-                            RedirectStandardError = false
                         };
-                        
-                        foreach (var arg in argument)
-                        {
-                            startInfo.ArgumentList.Add(arg);
-                        }
 
-                        try 
+                        // 2. Build the 'exec' command
+                        // exec -a [Name the program sees] [Actual Path] [Arguments]
+                        startInfo.ArgumentList.Add("-c");
+                        startInfo.ArgumentList.Add($"exec -a \"{cmd}\" \"{filePath}\" {escapedArgs}");
+
+                        try
                         {
-                        using Process? process = Process.Start(startInfo);
-                        process?.WaitForExit();
-                    }
-                        catch (Exception ex)
+                            using Process? process = Process.Start(startInfo);
+                            process?.WaitForExit();
+                        }
+                        catch (Exception)
                         {
-                            Console.WriteLine($"Error executing command: {ex.Message}");
+                            Console.WriteLine($"{cmd}: command not found");
                         }
                     }
             }
