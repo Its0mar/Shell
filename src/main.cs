@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 class Program
 {
     static void Main()
@@ -15,19 +17,19 @@ class Program
             if (string.IsNullOrWhiteSpace(input)) continue;
             if (input == "exit" || input == "exit 0") break;
 
-            var parts = input.Split(' ', 2);
+            var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
             var cmd = parts[0];
-            var argument = parts.Length > 1 ? parts[1] : "";
+            var argument = parts[1..];
 
             if (cmd == "echo")
             {
-                Console.WriteLine(argument);
+                Console.WriteLine(string.Join(' ', argument));
             }
             else if (cmd == "type")
             {
-                if (builtinCommands.Contains(argument))
+                if (builtinCommands.Contains(argument[0]))
                 {
-                    Console.WriteLine($"{argument} is a shell builtin");
+                    Console.WriteLine($"{argument[0]} is a shell builtin");
                 }
                 else
                 {
@@ -37,11 +39,11 @@ class Program
                     bool found = false;
                     foreach (var dir in directories) 
                     {
-                        var filePath = Path.Combine(dir, argument);
+                        var filePath = Path.Combine(dir, argument[0]);
 
                         if (File.Exists(filePath) && File.GetUnixFileMode(filePath).HasFlag(UnixFileMode.UserExecute))
                         {
-                            Console.WriteLine($"{argument} is {filePath}");
+                            Console.WriteLine($"{argument[0]} is {filePath}");
                             found = true;
                             break;
                         }   
@@ -49,13 +51,57 @@ class Program
 
                     if (!found)
                     {
-                        Console.WriteLine($"{argument}: not found");
+                        Console.WriteLine($"{argument[0]}: not found");
                     }
                 }
             }
             else 
             {
-                Console.WriteLine($"{input}: command not found");
+                    string? pathEnv = Environment.GetEnvironmentVariable("PATH");
+                    string[] directories = pathEnv?.Split(Path.PathSeparator) ?? [];
+                    
+                    bool found = false;
+                    string filePath = "";
+                    foreach (var dir in directories) 
+                    {
+                        filePath = Path.Combine(dir, cmd);
+
+                        if (File.Exists(filePath) && File.GetUnixFileMode(filePath).HasFlag(UnixFileMode.UserExecute))
+                        {
+                            found = true;
+                            break;
+                        }   
+                    }
+
+                    if (!found)
+                    {
+                        Console.WriteLine($"{cmd}: command not found");
+                    }
+                    else
+                    {
+                        var startInfo = new ProcessStartInfo
+                        {
+                            FileName = filePath, 
+                            UseShellExecute = false,
+                            RedirectStandardOutput = false,
+                            RedirectStandardError = false
+                        };
+                        
+                        foreach (var arg in argument)
+                        {
+                            startInfo.ArgumentList.Add(arg);
+                        }
+
+                        try 
+                        {
+                        using Process? process = Process.Start(startInfo);
+                        process?.WaitForExit();
+                    }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error executing command: {ex.Message}");
+                        }
+                    }
             }
         }
     }
