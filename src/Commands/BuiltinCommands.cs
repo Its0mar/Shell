@@ -1,0 +1,44 @@
+using Shell.Core;
+
+namespace Shell.Commands;
+
+public class BuiltinCommands
+{
+    private static readonly HashSet<string> Names = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "echo", "exit", "type"
+    };
+
+    public static bool IsBuiltin(string command)
+    {
+        return Names.Contains(command);
+    }
+
+    public static void HandleEcho(string[] arguments)
+    {
+        Console.WriteLine(string.Join(' ', arguments));
+    }
+
+    public static void HandleType(string[] arguments, PathResolver pathResolver)
+    {
+        var target = arguments[0];
+
+        if (IsBuiltin(target))
+        {
+            Console.WriteLine($"{target} is a shell builtin");
+        }
+        else
+        {
+            var executablePath = pathResolver.FindExecutable(target);
+
+            if (executablePath != null)
+            {
+                Console.WriteLine($"{target} is {executablePath}");
+            }
+            else
+            {
+                Console.WriteLine($"{target}: not found");
+            }
+        }
+    }
+}
