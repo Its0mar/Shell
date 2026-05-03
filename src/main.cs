@@ -13,7 +13,7 @@ class Program
             var input = Console.ReadLine();
 
             if (string.IsNullOrWhiteSpace(input)) continue;
-            if (input == "exit 0") break;
+            if (input == "exit" || input == "exit 0") break;
 
             var parts = input.Split(' ', 2);
             var cmd = parts[0];
@@ -39,7 +39,7 @@ class Program
                     {
                         var filePath = Path.Combine(dir, argument);
 
-                        if (File.Exists(filePath))
+                        if (File.Exists(filePath) && File.GetUnixFileMode(filePath).HasFlag(UnixFileMode.UserExecute))
                         {
                             Console.WriteLine($"{argument} is {filePath}");
                             found = true;
