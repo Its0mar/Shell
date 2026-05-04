@@ -38,6 +38,10 @@ public class ShellRunner
             {
                 BuiltinCommands.HandlePwd();
             }
+            else if (cmd == "cd")
+            {
+                BuiltinCommands.HandleCd(arguments);
+            }
             else
             {
                 var executablePath = _pathResolver.FindExecutable(cmd);

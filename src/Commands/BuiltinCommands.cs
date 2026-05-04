@@ -6,7 +6,7 @@ public class BuiltinCommands
 {
     private static readonly HashSet<string> Names = new(StringComparer.OrdinalIgnoreCase)
     {
-        "echo", "exit", "type", "pwd"
+        "echo", "exit", "type", "pwd", "cd"
     };
 
     public static bool IsBuiltin(string command)
@@ -45,5 +45,16 @@ public class BuiltinCommands
     public static void HandlePwd()
     {
         Console.WriteLine(Directory.GetCurrentDirectory());
+    }
+
+    public static void HandleCd(string[] arguments)
+    {
+        var target = arguments[0];
+        if (!Directory.Exists(target)) {
+            Console.WriteLine($"{target}: No such file or directory");
+            return;
+        }
+        
+        Directory.SetCurrentDirectory(target);
     }
 }
