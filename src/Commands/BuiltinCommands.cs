@@ -1,3 +1,4 @@
+using System.Net.NetworkInformation;
 using Shell.Core;
 
 namespace Shell.Commands;
@@ -50,11 +51,19 @@ public class BuiltinCommands
     public static void HandleCd(string[] arguments)
     {
         var target = arguments[0];
+        if (target == "~") {
+            HandleCdHome();
+            return;
+        }
         if (!Directory.Exists(target)) {
             Console.WriteLine($"{target}: No such file or directory");
             return;
         }
-        
+
         Directory.SetCurrentDirectory(target);
+    }
+
+    private static void HandleCdHome() {
+        Directory.SetCurrentDirectory(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
     }
 }
