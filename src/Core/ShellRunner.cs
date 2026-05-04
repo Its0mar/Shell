@@ -34,6 +34,10 @@ public class ShellRunner
             {
                 BuiltinCommands.HandleType(arguments, _pathResolver);
             }
+            else if (cmd == "pwd")
+            {
+                BuiltinCommands.HandlePwd();
+            }
             else
             {
                 var executablePath = _pathResolver.FindExecutable(cmd);
