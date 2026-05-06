@@ -1,4 +1,6 @@
-namespace Shell.Core;
+using System.Text;
+
+namespace src.Core;
 
 public class CommandParser
 {
@@ -6,13 +8,40 @@ public class CommandParser
 
     public static ParsedCommand? Parse(string? input)
     {
-        if (string.IsNullOrWhiteSpace(input))
-            return null;
+        if (string.IsNullOrWhiteSpace(input)) return null;
 
-        var parts = input.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        var name = parts[0];
-        var arguments = parts[1..];
+        List<string> args = new();
+        StringBuilder currentArg = new();
+        bool inSingleQuote = false;
 
-        return new ParsedCommand(name, arguments);
+        for (int i = 0; i < input.Length; i++)
+        {
+            char c = input[i];
+
+            if (c == '\'')
+            {
+                inSingleQuote = !inSingleQuote;
+            }
+            else if (c == ' ' && !inSingleQuote)
+            {
+                if (currentArg.Length > 0)
+                {
+                    args.Add(currentArg.ToString());
+                    currentArg.Clear();
+                }
+            }
+            else
+            {
+                currentArg.Append(c);
+            }
+        }
+
+        if (currentArg.Length > 0)
+            args.Add(currentArg.ToString());
+
+        if (args.Count == 0) return null;
+
+        return new ParsedCommand(args[0], [.. args.Skip(1)]);
     }
+
 }
